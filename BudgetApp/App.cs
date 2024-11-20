@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,6 +11,7 @@ namespace BudgetApp
     {
         private bool isRunning = false;
         private List<BudgetItem> Items = new List<BudgetItem>();
+        private string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "budget.txt");
 
         public App()
         {
@@ -19,6 +21,8 @@ namespace BudgetApp
         private void Run()
         {
             isRunning = true;
+
+            LoadItems();
 
             // start our loop
             while (isRunning)
@@ -54,6 +58,31 @@ namespace BudgetApp
             }
         }
 
+        private void LoadItems()
+        {
+            // bucket for items as a string
+            List<string> lines = new List<string>();
+
+            // open the file and read its contents into our bucket
+            foreach (var line in File.ReadAllLines(FilePath))
+            {
+                lines.Add(line);
+            }
+
+            // for each item in the bucket
+            foreach (var line in lines)
+            {
+                // add a new item to the list
+                Items.Add(new BudgetItem(
+                        Convert.ToInt32(line.Split(" - ")[0]),
+                        line.Split(" - ")[1],
+                        Convert.ToDouble(line.Split(" - ")[2])
+                    )
+                );
+            }
+
+        }
+
         public void AddBudgetItem()
         {
             Console.Write("What is the name of the item you wish to add? ");
@@ -79,14 +108,35 @@ namespace BudgetApp
             {
                 Console.WriteLine(item);
             }
+            Console.WriteLine("-------------------");
+            Console.WriteLine("Total:\t\t" + GetTotalBudget());
+        }
+
+        public double GetTotalBudget()
+        {
+            double total = 0;
+
+            foreach (var item in Items)
+            {
+                total = total + item.Amount;
+            }
+
+            return total;
         }
 
         public void SaveBudget()
         {
             Console.WriteLine("Saving the budget to file.");
+
+            List<string> items = new List<string>();
+
+            foreach (var item in Items)
+            {
+                items.Add(item.ToString());
+            }
+
+            File.WriteAllLines(FilePath, items);
         }
-
-
 
         public void PrintMenu()
         {
